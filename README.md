@@ -1,13 +1,10 @@
 <p align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
     <img src="https://i.ibb.co/2K9m2tV/final2.png" alt="Logo" width="528" height="206">
-  </a>
 
   <h3 align="center">Ansible-Wiki.js</h3>
 
   <p align="center">
     Instale e Configure o Wiki.js com Ansible e Vagrant
-    <br />
   </p>
 </p>
 
@@ -62,9 +59,7 @@ TASK [instalando dependências] ************************************************
 ## Acesso Web
 Ao finalizar todas as tasks, acesse através do navegador o endereço `http://192.168.1.40:3000` e finalize o setup inicial.
 <p align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
     <img src="https://i.ibb.co/0tvgfdF/wiki.png" alt="Logo" width="707" height="661">
-  </a>
 </p>
   
 ## Vagrant Box

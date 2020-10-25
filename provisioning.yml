@@ -1,0 +1,122 @@
+---
+- hosts: all
+  become: yes
+  
+  vars:
+    WIKIJS_VERSION: '2.5.159'
+    NODEJS_VERSION: '14'
+  
+  tasks:
+    - name: instalando dependências
+      apt:
+        name:
+            - socat
+            - bash-completion
+            - apt-transport-https
+            - build-essential
+            - unzip
+            - libpq-dev
+            - python3-pip
+            - acl
+        state: present
+
+    - name: baixando setup do NodeJS
+      shell: curl -sL https://deb.nodesource.com/setup_{{ NODEJS_VERSION }}.x | sudo -E bash -
+        
+    - name: instalando NodeJs
+      apt:
+        name: nodejs
+        state: present
+    
+    - name: atualizando o NPM
+      shell: npm install -g npm@latest
+
+    - name: baixando arquivo de instalação do Wiki.js
+      get_url:
+        url: https://github.com/Requarks/wiki/releases/download/{{ WIKIJS_VERSION }}/wiki-js.tar.gz
+        dest: /tmp/
+
+    - name: criando diretório do Wiki.js
+      file:
+        path: /var/wiki
+        state: directory
+
+    - name: descompactando o arquivo de instalação
+      unarchive:
+        src: /tmp/wiki-js.tar.gz
+        dest: /var/wiki/
+        remote_src: yes
+        mode: 755
+    
+    - name: renomeando config do Wiki.js
+      shell: mv /var/wiki/config.sample.yml /var/wiki/config.yml
+    
+    - name: instalando Postgres
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+          - python3-psycopg2
+        state: latest
+
+    - name: startando serviço do Postgres
+      service: name=postgresql state=restarted enabled=yes
+
+    - name: criando db Postgres
+      become: true
+      become_user: postgres
+      postgresql_db: name='wiki'
+                     state=present
+
+    - name: criando user Postgres
+      become: true
+      become_user: postgres
+      postgresql_user: db='wiki'
+                       name=wikijs
+                       state=present
+                       password=wikijsrocks
+                       priv=ALL
+                       state=present
+
+    - name: criando config de serviço
+      copy:
+        dest: /etc/systemd/system/wiki.service
+        content: |
+          [Unit]
+          Description=Wiki.js
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/node server
+          Restart=always
+
+          User=vagrant
+          Environment=NODE_ENV=production
+          WorkingDirectory=/var/wiki
+
+          [Install]
+          WantedBy=multi-user.target
+    
+    - name: aplicando permissão
+      file:
+        dest: /var/wiki
+        owner: vagrant
+        group: vagrant
+        mode: u=rwX,g=rX,o=rX 
+        recurse: yes
+
+    - name: realizando reload do systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: startando serviço do Wiki.js
+      systemd:
+        state: started
+        name: wiki
+  
+    - name: habilitando serviço do Wiki.js
+      systemd:
+        name: wiki
+        enabled: yes
+        masked: no

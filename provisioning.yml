@@ -80,23 +80,8 @@
 
     - name: criando config de serviço
       copy:
+        src: 'files/wiki.service'
         dest: /etc/systemd/system/wiki.service
-        content: |
-          [Unit]
-          Description=Wiki.js
-          After=network.target
-
-          [Service]
-          Type=simple
-          ExecStart=/usr/bin/node server
-          Restart=always
-
-          User=vagrant
-          Environment=NODE_ENV=production
-          WorkingDirectory=/var/wiki
-
-          [Install]
-          WantedBy=multi-user.target
     
     - name: aplicando permissão
       file:
